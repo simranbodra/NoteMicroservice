@@ -1,6 +1,6 @@
 package com.bridgelabz.microserice.fundoonotes.note.services;
 
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -10,6 +10,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.bridgelabz.microserice.fundoonotes.note.exceptions.ElasticsearchFailException;
 import com.bridgelabz.microserice.fundoonotes.note.exceptions.GetLinkInfoException;
 import com.bridgelabz.microserice.fundoonotes.note.exceptions.InvalidLabelNameException;
 import com.bridgelabz.microserice.fundoonotes.note.exceptions.LabelException;
@@ -20,12 +21,11 @@ import com.bridgelabz.microserice.fundoonotes.note.models.Label;
 import com.bridgelabz.microserice.fundoonotes.note.models.LabelDTO;
 import com.bridgelabz.microserice.fundoonotes.note.models.Note;
 import com.bridgelabz.microserice.fundoonotes.note.models.NoteDTO;
-import com.bridgelabz.microserice.fundoonotes.note.models.URLInfo;
-import com.bridgelabz.microserice.fundoonotes.note.repositories.LabelElasticsearchRepository;
+import com.bridgelabz.microserice.fundoonotes.note.repositories.LabelAWSElasticRepository;
 import com.bridgelabz.microserice.fundoonotes.note.repositories.LabelRepository;
-import com.bridgelabz.microserice.fundoonotes.note.repositories.NoteElasticsearchRepository;
+import com.bridgelabz.microserice.fundoonotes.note.repositories.NoteAWSElasticRepository;
 import com.bridgelabz.microserice.fundoonotes.note.repositories.NoteRepository;
-import com.bridgelabz.microserice.fundoonotes.note.utility.LinkInfoProvider;
+import com.bridgelabz.microserice.fundoonotes.note.utility.NoteUtility;
 
 @Service
 public class LabelServiceImpl implements LabelService {
@@ -34,19 +34,16 @@ public class LabelServiceImpl implements LabelService {
 	private LabelRepository labelRepository;
 
 	@Autowired
-	private LabelElasticsearchRepository labelElasticsearchRepository;
-
-	@Autowired
 	private NoteRepository noteRepository;
-
-	@Autowired
-	private NoteElasticsearchRepository noteElasticsearchRepository;
 
 	@Autowired
 	private ModelMapper modelMapper;
 	
 	@Autowired
-	private LinkInfoProvider linkInfoProvider;
+	private NoteAWSElasticRepository noteAWSElasticRepository;
+	
+	@Autowired
+	private LabelAWSElasticRepository labelAWSElasticRepository;
 
 	/**
 	 * To create a label
@@ -56,14 +53,15 @@ public class LabelServiceImpl implements LabelService {
 	 * @return LabelDTO
 	 * @throws LabelException
 	 * @throws InvalidLabelNameException
+	 * @throws ElasticsearchFailException 
 	 */
 	@Override
-	public LabelDTO createLabel(String userId, String labelName) throws LabelException, InvalidLabelNameException {
+	public LabelDTO createLabel(String userId, String labelName) throws LabelException, InvalidLabelNameException, ElasticsearchFailException {
 		if (labelName == null || labelName.trim().length() == 0) {
 			throw new InvalidLabelNameException("Invalid LabelName");
 		}
 
-		Optional<Label> optionalLabel = labelRepository.findByLabelNameAndUserId(labelName, userId);
+		Optional<Label> optionalLabel = labelAWSElasticRepository.findByLabelNameAndUserId(labelName, userId);
 		if (optionalLabel.isPresent()) {
 			throw new LabelException("Label with this name already exists");
 		}
@@ -71,14 +69,16 @@ public class LabelServiceImpl implements LabelService {
 		Label label = new Label();
 		label.setLabelName(labelName);
 		label.setUserId(userId);
+		label.setCreatedAt(NoteUtility.getCurrentDate());
 
 		labelRepository.save(label);
 
-		labelElasticsearchRepository.save(label);
+		labelAWSElasticRepository.save(label);
 
 		LabelDTO labelDto = new LabelDTO();
 		labelDto.setLabelId(label.getLabelId());
 		labelDto.setLabelName(labelName);
+		labelDto.setCreatedAt(label.getCreatedAt());
 
 		return labelDto;
 	}
@@ -90,10 +90,11 @@ public class LabelServiceImpl implements LabelService {
 	 * @param labelId
 	 * @return list of labelDTO
 	 * @throws LabelNotFoundException
+	 * @throws ElasticsearchFailException 
 	 */
 	@Override
-	public List<LabelDTO> getAllLabel(String userId) throws LabelNotFoundException {
-		List<Label> labelList = labelRepository.findAllByUserId(userId);
+	public List<LabelDTO> getAllLabel(String userId) throws LabelNotFoundException, ElasticsearchFailException {
+		List<Label> labelList = labelAWSElasticRepository.findAllByUserId(userId);
 
 		if (labelList.isEmpty()) {
 			throw new LabelNotFoundException("No Labels found");
@@ -113,12 +114,13 @@ public class LabelServiceImpl implements LabelService {
 	 * @param labelName
 	 * @throws LabelNotFoundException
 	 * @throws UnauthorizedException
+	 * @throws ElasticsearchFailException 
 	 */
 	@Override
 	public void updateLabel(String userId, String labelId, String labelName)
-			throws UnauthorizedException, LabelNotFoundException {
+			throws UnauthorizedException, LabelNotFoundException, ElasticsearchFailException {
 
-		Optional<Label> optionalLabel = labelRepository.findByLabelIdAndUserId(labelId, userId);
+		Optional<Label> optionalLabel = labelAWSElasticRepository.findByLabelIdAndUserId(labelId, userId);
 
 		if (!optionalLabel.isPresent()) {
 			throw new LabelNotFoundException("No such label found");
@@ -129,7 +131,7 @@ public class LabelServiceImpl implements LabelService {
 
 		labelRepository.save(label);
 
-		labelElasticsearchRepository.save(label);
+		labelAWSElasticRepository.save(label);
 
 		List<Note> noteList = noteRepository.findAllByUserId(userId);
 
@@ -140,7 +142,7 @@ public class LabelServiceImpl implements LabelService {
 					note.getListOfLabel().get(j).setLabelName(labelName);
 					noteRepository.save(note);
 
-					noteElasticsearchRepository.save(note);
+					noteAWSElasticRepository.save(note);
 				}
 			}
 		}
@@ -154,16 +156,17 @@ public class LabelServiceImpl implements LabelService {
 	 * @param labelId
 	 * @throws UnauthorizedException
 	 * @throws LabelNotFoundException
+	 * @throws ElasticsearchFailException 
 	 */
 	@Override
-	public void deleteLabel(String userId, String labelId) throws LabelNotFoundException {
+	public void deleteLabel(String userId, String labelId) throws LabelNotFoundException, ElasticsearchFailException {
 		Optional<Label> optionalLabel = labelRepository.findByLabelIdAndUserId(labelId, userId);
 
 		if (!optionalLabel.isPresent()) {
 			throw new LabelNotFoundException("No such label found");
 		}
 
-		labelElasticsearchRepository.deleteById(labelId);
+		labelAWSElasticRepository.deleteById(labelId);
 
 		labelRepository.deleteById(labelId);
 
@@ -178,7 +181,7 @@ public class LabelServiceImpl implements LabelService {
 
 			noteRepository.save(note);
 
-			noteElasticsearchRepository.save(note);
+			noteAWSElasticRepository.save(note);
 		}
 
 	}
@@ -190,18 +193,20 @@ public class LabelServiceImpl implements LabelService {
 	 * @param labelId
 	 * @return list of note
 	 * @throws LabelNotFoundException
-	 * @throws GetLinkInfoException 
-	 * @throws NoteNotFoundException 
+	 * @throws GetLinkInfoException
+	 * @throws NoteNotFoundException
+	 * @throws ElasticsearchFailException 
 	 */
 	@Override
-	public List<NoteDTO> getLabel(String userId, String labelId) throws LabelNotFoundException, GetLinkInfoException, NoteNotFoundException {
-		Optional<Label> optionalLabel = labelRepository.findByLabelIdAndUserId(labelId, userId);
+	public List<NoteDTO> getLabel(String userId, String labelId)
+			throws LabelNotFoundException, GetLinkInfoException, NoteNotFoundException, ElasticsearchFailException {
+		Optional<Label> optionalLabel = labelAWSElasticRepository.findByLabelIdAndUserId(labelId, userId);
 
 		if (!optionalLabel.isPresent()) {
 			throw new LabelNotFoundException("No such label found");
 		}
 
-		List<Note> noteList = noteRepository.findAllByUserIdAndTrash(userId, false);
+		List<Note> noteList = noteAWSElasticRepository.findAllByUserIdAndTrash(userId, false);
 
 		if (noteList.isEmpty()) {
 			throw new NoteNotFoundException("No Note Found");
@@ -209,17 +214,6 @@ public class LabelServiceImpl implements LabelService {
 
 		List<NoteDTO> noteDtos = noteList.stream().map(filterNote -> modelMapper.map(filterNote, NoteDTO.class))
 				.collect(Collectors.toList());
-
-		for (int i = 0; i < noteList.size(); i++) {
-			List<String> urlList = noteList.get(i).getListOfUrl();
-
-			List<URLInfo> urlInfoList = new ArrayList<>();
-
-			for (int j = 0; j < urlList.size(); j++) {
-				urlInfoList.add(linkInfoProvider.getLinkInformation(urlList.get(j)));
-			}
-			noteDtos.get(i).setListOfUrl(urlInfoList);
-		}
 
 		List<NoteDTO> pinnedNoteDtoList = noteDtos.stream().filter(NoteDTO::getPin).collect(Collectors.toList());
 
@@ -230,5 +224,32 @@ public class LabelServiceImpl implements LabelService {
 				.collect(Collectors.toList());
 
 		return noteDtoList;
+	}
+
+	@Override
+	public List<LabelDTO> sortByName(String userId, String sortType, String format) throws LabelNotFoundException, ElasticsearchFailException {
+		List<Label> labelList = labelAWSElasticRepository.findAllByUserId(userId);
+
+		if (labelList.isEmpty()) {
+			throw new LabelNotFoundException("No label found");
+		}
+
+		if (sortType == null || sortType.equalsIgnoreCase("Date")) {
+			if (format == null || format.equalsIgnoreCase("ascending")) {
+				return labelList.stream().sorted(Comparator.comparing(Label::getCreatedAt))
+						.map(sortedList -> modelMapper.map(sortedList, LabelDTO.class)).collect(Collectors.toList());
+			}
+
+			return labelList.stream().sorted(Comparator.comparing(Label::getCreatedAt).reversed())
+					.map(sortedList -> modelMapper.map(sortedList, LabelDTO.class)).collect(Collectors.toList());
+		}
+
+		if (format == null || format.equalsIgnoreCase("ascending")) {
+			return labelList.stream().sorted(Comparator.comparing(Label::getLabelName))
+					.map(sortedList -> modelMapper.map(sortedList, LabelDTO.class)).collect(Collectors.toList());
+		}
+
+		return labelList.stream().sorted(Comparator.comparing(Label::getLabelName).reversed())
+				.map(sortedList -> modelMapper.map(sortedList, LabelDTO.class)).collect(Collectors.toList());
 	}
 }

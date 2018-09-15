@@ -11,11 +11,8 @@ public interface NoteElasticsearchRepository extends ElasticsearchRepository<Not
 
 	public List<Note> findAllByUserId(String userId);
 
-	public Optional<Note> findByUserId(String userId);
-
 	public List<Note> findAllByUserIdAndTrash(String userId, boolean isTrashed);
 
 	public Optional<Note> findByNoteIdAndUserId(String noteId, String userId);
 
-	// public List<Note> findAllByUserIdAndLabelId(String userId, String labelId);
 }

@@ -1,12 +1,15 @@
 package com.bridgelabz.microserice.fundoonotes.note.models;
 
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 
-@Document(indexName = "notesmsindex", type = "note")
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@Document(indexName = "notesmsindex", type = "notes")
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Note {
 
 	@Id
@@ -15,14 +18,15 @@ public class Note {
 	private String title;
 	private String description;
 	private String colour;
-	private Date createdAt;
-	private Date lastUpdated;
+	private String createdAt;
+	private String lastUpdated;
 	private String reminder;
 	private boolean trash;
 	private boolean pin;
 	private boolean archive;
 	private List<LabelDTO> listOfLabel;
-	private List<String> listOfUrl;
+	private List<URLInfo> listOfUrl;
+	private List<String> listOfImage=new ArrayList<>();
 
 	public Note() {
 		super();
@@ -68,19 +72,19 @@ public class Note {
 		this.colour = colour;
 	}
 
-	public Date getCreatedAt() {
+	public String getCreatedAt() {
 		return createdAt;
 	}
 
-	public void setCreatedAt(Date createdAt) {
+	public void setCreatedAt(String createdAt) {
 		this.createdAt = createdAt;
 	}
 
-	public Date getLastUpdated() {
+	public String getLastUpdated() {
 		return lastUpdated;
 	}
 
-	public void setLastUpdated(Date lastUpdated) {
+	public void setLastUpdated(String lastUpdated) {
 		this.lastUpdated = lastUpdated;
 	}
 
@@ -124,12 +128,20 @@ public class Note {
 		this.listOfLabel = listOfLabel;
 	}
 
-	public List<String> getListOfUrl() {
+	public List<URLInfo> getListOfUrl() {
 		return listOfUrl;
 	}
 
-	public void setListOfUrl(List<String> listOfUrl) {
+	public void setListOfUrl(List<URLInfo> listOfUrl) {
 		this.listOfUrl = listOfUrl;
+	}
+
+	public List<String> getListOfImage() {
+		return listOfImage;
+	}
+
+	public void setListOfImage(List<String> listOfImage) {
+		this.listOfImage = listOfImage;
 	}
 
 	@Override
@@ -137,7 +149,7 @@ public class Note {
 		return "Note [noteId=" + noteId + ", userId=" + userId + ", title=" + title + ", description=" + description
 				+ ", colour=" + colour + ", createdAt=" + createdAt + ", lastUpdated=" + lastUpdated + ", reminder="
 				+ reminder + ", trash=" + trash + ", pin=" + pin + ", archive=" + archive + ", listOfLabel="
-				+ listOfLabel + ", listOfUrl=" + listOfUrl + "]";
+				+ listOfLabel + ", listOfUrl=" + listOfUrl + ", listOfImage=" + listOfImage + "]";
 	}
 
 }

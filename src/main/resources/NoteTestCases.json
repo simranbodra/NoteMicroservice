@@ -1,0 +1,33 @@
+{
+	"SuccessfulNoteCreation": {
+		"request": {
+			"url": "/notes/create",
+			"headers": {
+				"userId": [
+					""
+				]
+			},
+			"body": {
+				"archive": false,
+				"colour": "Yellow",
+				"description": "Hello World",
+				"listOfLabel": [
+					"Hello"
+				],
+				"pin": true,
+				"reminder": "01/12/2018 01:00:00",
+				"title": "Hello"
+			},
+			"method": "POST"
+		},
+		"response": {
+			"status": "CREATED",
+			"headers": {
+				
+			},
+			"body": {
+				
+			}
+		}
+	}
+}

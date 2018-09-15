@@ -8,13 +8,14 @@ public class NoteDTO {
 	private String noteId;
 	private String title;
 	private String description;
-	private Date createdAt;
-	private Date lastUpdated;
+	private String createdAt;
+	private String lastUpdated;
 	private String reminder;
 	private boolean pin;
 	private boolean archive;
 	private List<LabelDTO> listOfLabel;
 	private List<URLInfo> listOfUrl;
+	private List<String> listOfImage;
 
 	public NoteDTO() {
 		super();
@@ -44,19 +45,19 @@ public class NoteDTO {
 		this.description = description;
 	}
 
-	public Date getCreatedAt() {
+	public String getCreatedAt() {
 		return createdAt;
 	}
 
-	public void setCreatedAt(Date createdAt) {
+	public void setCreatedAt(String createdAt) {
 		this.createdAt = createdAt;
 	}
 
-	public Date getLastUpdated() {
+	public String getLastUpdated() {
 		return lastUpdated;
 	}
 
-	public void setLastUpdated(Date lastUpdated) {
+	public void setLastUpdated(String lastUpdated) {
 		this.lastUpdated = lastUpdated;
 	}
 
@@ -98,6 +99,14 @@ public class NoteDTO {
 
 	public void setListOfUrl(List<URLInfo> listOfUrl) {
 		this.listOfUrl = listOfUrl;
+	}
+
+	public List<String> getListOfImage() {
+		return listOfImage;
+	}
+
+	public void setListOfImage(List<String> listOfImage) {
+		this.listOfImage = listOfImage;
 	}
 
 	@Override

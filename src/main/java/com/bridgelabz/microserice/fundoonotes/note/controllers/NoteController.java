@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.bridgelabz.microserice.fundoonotes.note.exceptions.ElasticsearchFailException;
+import com.bridgelabz.microserice.fundoonotes.note.exceptions.FileConversionException;
 import com.bridgelabz.microserice.fundoonotes.note.exceptions.GetLinkInfoException;
 import com.bridgelabz.microserice.fundoonotes.note.exceptions.InvalidLabelNameException;
 import com.bridgelabz.microserice.fundoonotes.note.exceptions.LabelException;
@@ -46,10 +49,11 @@ public class NoteController {
 	 * @throws ReminderException
 	 * @throws ParseException
 	 * @throws GetLinkInfoException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/create", method = RequestMethod.POST)
 	public ResponseEntity<NoteDTO> createNote(HttpServletRequest request, @RequestBody CreateNote newNote)
-			throws NoteException, ReminderException, GetLinkInfoException {
+			throws NoteException, ReminderException, GetLinkInfoException, ParseException, ElasticsearchFailException {
 
 		String userId = request.getHeader("UserId");
 
@@ -67,10 +71,11 @@ public class NoteController {
 	 * @throws NoteNotFoundException
 	 * @throws UnauthorizedException
 	 * @throws GetLinkInfoException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/getNote/{noteId}", method = RequestMethod.GET)
 	public ResponseEntity<NoteDTO> getNote(HttpServletRequest request, @PathVariable String noteId)
-			throws NoteNotFoundException, UnauthorizedException, GetLinkInfoException {
+			throws NoteNotFoundException, UnauthorizedException, GetLinkInfoException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		NoteDTO noteDto = noteService.getNote(userId, noteId);
@@ -85,10 +90,11 @@ public class NoteController {
 	 * @return List of notes
 	 * @throws NoteNotFoundException
 	 * @throws GetLinkInfoException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/getAllNotes", method = RequestMethod.GET)
 	public ResponseEntity<List<NoteDTO>> getAllNotes(HttpServletRequest request)
-			throws NoteNotFoundException, GetLinkInfoException {
+			throws NoteNotFoundException, GetLinkInfoException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 		System.out.println(userId);
 
@@ -108,12 +114,14 @@ public class NoteController {
 	 * @throws NoteNotFoundException
 	 * @throws UnauthorizedException
 	 * @throws ReminderException
+	 * @throws GetLinkInfoException 
 	 * @throws ParseException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/update/{noteId}", method = RequestMethod.PUT)
 	public ResponseEntity<Response> updateNote(HttpServletRequest request, @PathVariable String noteId,
 			@RequestBody UpdateNote updateNote)
-			throws NoteException, NoteNotFoundException, UnauthorizedException, ReminderException {
+			throws NoteException, NoteNotFoundException, UnauthorizedException, ReminderException, ParseException, GetLinkInfoException, ElasticsearchFailException {
 
 		String userId = request.getHeader("UserId");
 
@@ -133,10 +141,11 @@ public class NoteController {
 	 * @return ResponseDTO
 	 * @throws NoteNotFoundException
 	 * @throws UnauthorizedException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/delete/{noteId}", method = RequestMethod.PUT)
 	public ResponseEntity<Response> deleteNote(HttpServletRequest request, @PathVariable String noteId)
-			throws NoteNotFoundException, UnauthorizedException {
+			throws NoteNotFoundException, UnauthorizedException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		noteService.deleteNote(userId, noteId);
@@ -155,10 +164,11 @@ public class NoteController {
 	 * @return ResponseDTO
 	 * @throws NoteNotFoundException
 	 * @throws UnauthorizedException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/permanentDeleteRestore/{noteId}", method = RequestMethod.DELETE)
 	public ResponseEntity<Response> deleteFromTrash(HttpServletRequest request, @PathVariable String noteId,
-			@RequestParam boolean delete) throws NoteNotFoundException, UnauthorizedException {
+			@RequestParam boolean delete) throws NoteNotFoundException, UnauthorizedException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		noteService.permanentNoteDelete(userId, noteId, delete);
@@ -175,9 +185,10 @@ public class NoteController {
 	 * @param request
 	 * @return ResponseDTO
 	 * @throws NoteNotFoundException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/emptyTrash", method = RequestMethod.DELETE)
-	public ResponseEntity<Response> emptyTrash(HttpServletRequest request) throws NoteNotFoundException {
+	public ResponseEntity<Response> emptyTrash(HttpServletRequest request) throws NoteNotFoundException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		noteService.emptyTrash(userId);
@@ -195,10 +206,11 @@ public class NoteController {
 	 * @return list of trash notes
 	 * @throws NoteNotFoundException
 	 * @throws GetLinkInfoException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/getTrash", method = RequestMethod.GET)
 	public ResponseEntity<List<NoteDTO>> getTrash(HttpServletRequest request)
-			throws NoteNotFoundException, GetLinkInfoException {
+			throws NoteNotFoundException, GetLinkInfoException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		List<NoteDTO> trashList = noteService.getTrash(userId);
@@ -216,10 +228,11 @@ public class NoteController {
 	 * @throws NoteNotFoundException
 	 * @throws UnauthorizedException
 	 * @throws NoteException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/setColour/{noteId}", method = RequestMethod.PUT)
 	public ResponseEntity<Response> addColour(HttpServletRequest request, @PathVariable String noteId,
-			@RequestParam String colour) throws NoteNotFoundException, UnauthorizedException, NoteException {
+			@RequestParam String colour) throws NoteNotFoundException, UnauthorizedException, NoteException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		noteService.addColour(userId, noteId, colour);
@@ -241,10 +254,11 @@ public class NoteController {
 	 * @throws UnauthorizedException
 	 * @throws ReminderException
 	 * @throws ParseException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/addReminder/{noteId}", method = RequestMethod.PUT)
 	public ResponseEntity<Response> addReminder(HttpServletRequest request, @PathVariable String noteId,
-			@RequestParam String reminder) throws NoteNotFoundException, UnauthorizedException, ReminderException {
+			@RequestParam String reminder) throws NoteNotFoundException, UnauthorizedException, ReminderException, ParseException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		noteService.addNoteReminder(userId, noteId, reminder);
@@ -263,10 +277,11 @@ public class NoteController {
 	 * @return ResponseDTO
 	 * @throws NoteNotFoundException
 	 * @throws UnauthorizedException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/removeReminder/{noteId}", method = RequestMethod.PUT)
 	public ResponseEntity<Response> removeReminder(HttpServletRequest request, @PathVariable String noteId)
-			throws NoteNotFoundException, UnauthorizedException {
+			throws NoteNotFoundException, UnauthorizedException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		noteService.removeReminder(userId, noteId);
@@ -285,10 +300,11 @@ public class NoteController {
 	 * @return ResponseDTO
 	 * @throws NoteNotFoundException
 	 * @throws UnauthorizedException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/addPin/{noteId}", method = RequestMethod.PUT)
 	public ResponseEntity<Response> addPin(HttpServletRequest request, @PathVariable String noteId)
-			throws NoteNotFoundException, UnauthorizedException {
+			throws NoteNotFoundException, UnauthorizedException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		noteService.addPin(userId, noteId);
@@ -308,10 +324,11 @@ public class NoteController {
 	 * @return ResponseDTO
 	 * @throws NoteNotFoundException
 	 * @throws UnauthorizedException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/removePin/{noteId}", method = RequestMethod.PUT)
 	public ResponseEntity<Response> removePin(HttpServletRequest request, @PathVariable String noteId)
-			throws NoteNotFoundException, UnauthorizedException {
+			throws NoteNotFoundException, UnauthorizedException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		noteService.removePin(userId, noteId);
@@ -331,10 +348,11 @@ public class NoteController {
 	 * @return ResponseDTO
 	 * @throws NoteNotFoundException
 	 * @throws UnauthorizedException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/addToArchive/{noteId}", method = RequestMethod.PUT)
 	public ResponseEntity<Response> addArchive(HttpServletRequest request, @PathVariable String noteId)
-			throws NoteNotFoundException, UnauthorizedException {
+			throws NoteNotFoundException, UnauthorizedException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		noteService.archiveNote(userId, noteId);
@@ -353,10 +371,11 @@ public class NoteController {
 	 * @return ResponseDTO
 	 * @throws NoteNotFoundException
 	 * @throws UnauthorizedException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/removeFromArchive/{noteId}", method = RequestMethod.PUT)
 	public ResponseEntity<Response> removeArchive(HttpServletRequest request, @PathVariable String noteId)
-			throws NoteNotFoundException, UnauthorizedException {
+			throws NoteNotFoundException, UnauthorizedException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		noteService.removeArchiveNote(userId, noteId);
@@ -374,10 +393,11 @@ public class NoteController {
 	 * @return ResponseDTO
 	 * @throws NoteNotFoundException
 	 * @throws GetLinkInfoException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/getArchiveNotes", method = RequestMethod.POST)
 	public ResponseEntity<List<NoteDTO>> viewArchiveNotes(HttpServletRequest request)
-			throws NoteNotFoundException, GetLinkInfoException {
+			throws NoteNotFoundException, GetLinkInfoException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		List<NoteDTO> archivedNoteList = noteService.getArchivedNote(userId);
@@ -397,11 +417,12 @@ public class NoteController {
 	 * @throws LabelException
 	 * @throws LabelNotFoundException
 	 * @throws InvalidLabelNameException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/addLabelToNote/{noteId}", method = RequestMethod.PUT)
 	public ResponseEntity<Response> addLabel(HttpServletRequest request, @PathVariable String noteId,
 			@RequestParam String labelName) throws NoteNotFoundException, UnauthorizedException, LabelException,
-			LabelNotFoundException, InvalidLabelNameException {
+			LabelNotFoundException, InvalidLabelNameException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		noteService.addLabel(userId, noteId, labelName);
@@ -422,10 +443,11 @@ public class NoteController {
 	 * @throws NoteNotFoundException
 	 * @throws UnauthorizedException
 	 * @throws LabelNotFoundException
+	 * @throws ElasticsearchFailException 
 	 */
 	@RequestMapping(value = "/deleteLabelFromNote/{noteId}", method = RequestMethod.PUT)
 	public ResponseEntity<Response> deteleLabelFromNote(HttpServletRequest request, @PathVariable String noteId,
-			@RequestParam String labelId) throws NoteNotFoundException, UnauthorizedException, LabelNotFoundException {
+			@RequestParam String labelId) throws NoteNotFoundException, UnauthorizedException, LabelNotFoundException, ElasticsearchFailException {
 		String userId = request.getHeader("UserId");
 
 		noteService.deleteNoteLabel(userId, noteId, labelId);
@@ -436,4 +458,86 @@ public class NoteController {
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
+	/**
+	 * To sort notes by title
+	 * 
+	 * @param request
+	 * @param format
+	 * @return List of NoteDTO
+	 * @throws NoteNotFoundException
+	 * @throws ElasticsearchFailException 
+	 */
+	@RequestMapping(value = "/sortByTitleOrDate", method = RequestMethod.GET)
+	public ResponseEntity<List<NoteDTO>> sortNotesByTitle(HttpServletRequest request,
+			@RequestParam(required = false) String sortType, @RequestParam(required = false) String format)
+			throws NoteNotFoundException, ElasticsearchFailException {
+		String userId = request.getHeader("UserId");
+
+		List<NoteDTO> noteDtoList = noteService.sortByTitleOrDate(userId, sortType, format);
+
+		return new ResponseEntity<>(noteDtoList, HttpStatus.OK);
+	}
+
+	/**
+	 * To add image to note
+	 * 
+	 * @param request
+	 * @param noteId
+	 * @param image
+	 * @return noteDTO
+	 * @throws NoteNotFoundException
+	 * @throws UnauthorizedException
+	 * @throws FileConversionException 
+	 * @throws ElasticsearchFailException 
+	 */
+	@RequestMapping(value = "/addImage/{noteId}", method = RequestMethod.GET)
+	public ResponseEntity<NoteDTO> addImage(HttpServletRequest request, @PathVariable String noteId,
+			@RequestParam MultipartFile image) throws NoteNotFoundException, UnauthorizedException, FileConversionException, ElasticsearchFailException {
+		String userId = request.getHeader("UserId");
+
+		NoteDTO noteDto = noteService.addImage(userId, noteId, image);
+
+		return new ResponseEntity<>(noteDto, HttpStatus.OK);
+	}
+
+	/**
+	 * To remove image from the note
+	 * @param request
+	 * @param noteId
+	 * @param imageUrl
+	 * @return NoteDTO
+	 * @throws NoteNotFoundException
+	 * @throws UnauthorizedException
+	 * @throws ElasticsearchFailException 
+	 */
+	@RequestMapping(value = "/removeImage/{noteId}", method = RequestMethod.GET)
+	public ResponseEntity<NoteDTO> removeImage(HttpServletRequest request, @PathVariable String noteId,
+			@RequestParam String imageUrl) throws NoteNotFoundException, UnauthorizedException, ElasticsearchFailException {
+		String userId = request.getHeader("UserId");
+
+		NoteDTO noteDto = noteService.removeImage(userId, noteId, imageUrl);
+
+		return new ResponseEntity<>(noteDto, HttpStatus.OK);
+	}
+	
+	/**
+	 * To get an image
+	 * 
+	 * @param request
+	 * @param noteId
+	 * @param imageName
+	 * @return Image link
+	 * @throws NoteNotFoundException
+	 * @throws UnauthorizedException
+	 * @throws ElasticsearchFailException
+	 */
+	@RequestMapping(value = "/getImage/{noteId}", method = RequestMethod.GET)
+	public ResponseEntity<String> getImage(HttpServletRequest request, @PathVariable String noteId,
+			@RequestParam String imageName) throws NoteNotFoundException, UnauthorizedException, ElasticsearchFailException{
+		String userId = request.getHeader("UserId");
+		
+		String imageUrl = noteService.getImageUrl(userId, noteId, imageName);
+		
+		return new ResponseEntity<>(imageUrl, HttpStatus.OK);
+	}
 }

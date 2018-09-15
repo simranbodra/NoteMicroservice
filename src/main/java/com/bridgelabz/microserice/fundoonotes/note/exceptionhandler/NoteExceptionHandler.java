@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import com.bridgelabz.microserice.fundoonotes.note.exceptions.ElasticsearchFailException;
+import com.bridgelabz.microserice.fundoonotes.note.exceptions.FileConversionException;
 import com.bridgelabz.microserice.fundoonotes.note.exceptions.GetLinkInfoException;
 import com.bridgelabz.microserice.fundoonotes.note.exceptions.InvalidLabelNameException;
 import com.bridgelabz.microserice.fundoonotes.note.exceptions.LabelException;
@@ -104,6 +106,39 @@ public class NoteExceptionHandler {
 		Response response = new Response();
 		response.setMessage(exception.getMessage());
 		response.setStatus(97);
+
+		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+	}
+	
+	@ExceptionHandler(FileConversionException.class)
+	public ResponseEntity<Response> handleFileConversionException(FileConversionException exception) {
+		logger.info("Error in multipart file conversion " + exception.getMessage(), exception);
+
+		Response response = new Response();
+		response.setMessage(exception.getMessage());
+		response.setStatus(98);
+
+		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+	}
+	
+	@ExceptionHandler(ElasticsearchFailException.class)
+	public ResponseEntity<Response> handleElasticsearchFailException(ElasticsearchFailException exception) {
+		logger.info("Error while retreivinf data from elasticsearch " + exception.getMessage(), exception);
+
+		Response response = new Response();
+		response.setMessage(exception.getMessage());
+		response.setStatus(99);
+
+		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+	}
+	
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<Response> handleException(Exception exception) {
+		logger.info("Something went worng " + exception.getMessage(), exception);
+
+		Response response = new Response();
+		response.setMessage(exception.getMessage());
+		response.setStatus(99);
 
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}

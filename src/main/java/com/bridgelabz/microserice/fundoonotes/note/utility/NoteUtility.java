@@ -37,9 +37,9 @@ public class NoteUtility {
 	 * 
 	 * @return Date
 	 */
-	public static Date getCurrentDate() {
+	public static String getCurrentDate() {
 		Date date = new Date();
-		return date;
+		return date.toString();
 	}
 
 	/**
@@ -59,7 +59,7 @@ public class NoteUtility {
 			throw new ReminderException("Error while parsing reminder");
 		}
 
-		if (reminder.before(getCurrentDate())) {
+		if (reminder.before(new Date())) {
 			throw new ReminderException("Date and time should be current date and time or after");
 		}
 		return true;
@@ -90,7 +90,6 @@ public class NoteUtility {
 		List<String> urlList = new ArrayList<>();
 
 		for (int i = 0; i < stringArray.length; i++) {
-			System.out.println(validateUrl(stringArray[i]));
 			if (validateUrl(stringArray[i])) {
 				urlList.add(stringArray[i]);
 			}
