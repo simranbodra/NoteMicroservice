@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.bridgelabz.microserice.fundoonotes.note.exceptions.ElasticsearchFailException;
@@ -18,12 +19,13 @@ import com.bridgelabz.microserice.fundoonotes.note.exceptions.ReminderException;
 import com.bridgelabz.microserice.fundoonotes.note.exceptions.UnauthorizedException;
 import com.bridgelabz.microserice.fundoonotes.note.models.Response;
 
+@ControllerAdvice
 public class NoteExceptionHandler {
 
 	private final Logger logger = LoggerFactory.getLogger(NoteExceptionHandler.class);
 
 	@ExceptionHandler(NoteException.class)
-	public ResponseEntity<Response> handleRegistrationException(NoteException exception) {
+	public ResponseEntity<Response> handleNoteException(NoteException exception) {
 		logger.info("Error occured while creating new node " + exception.getMessage(), exception);
 
 		Response response = new Response();
@@ -109,7 +111,7 @@ public class NoteExceptionHandler {
 
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
-	
+
 	@ExceptionHandler(FileConversionException.class)
 	public ResponseEntity<Response> handleFileConversionException(FileConversionException exception) {
 		logger.info("Error in multipart file conversion " + exception.getMessage(), exception);
@@ -120,7 +122,7 @@ public class NoteExceptionHandler {
 
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
-	
+
 	@ExceptionHandler(ElasticsearchFailException.class)
 	public ResponseEntity<Response> handleElasticsearchFailException(ElasticsearchFailException exception) {
 		logger.info("Error while retreivinf data from elasticsearch " + exception.getMessage(), exception);
@@ -131,7 +133,7 @@ public class NoteExceptionHandler {
 
 		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
-	
+
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<Response> handleException(Exception exception) {
 		logger.info("Something went worng " + exception.getMessage(), exception);

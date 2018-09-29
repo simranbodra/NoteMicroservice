@@ -60,12 +60,35 @@ public class NoteMicroServiceApplicationTests {
 		});
 	}
 
-	@Test
+	//@Test
 	public void test1() throws Exception {
-		Json json = cases.get("SuccessfulNoteCreation");
+		Json json = cases.get("SuccessfulLabelCreation");
+		createNoteTest(json);
+	}
+
+	@Test
+	public void test2() throws Exception {
+		Json json = cases.get("CreateNoteCase1");
 		test(json);
 	}
 
+	private void createNoteTest(Json json) throws Exception {
+		ResultActions actions = mockMvc
+				.perform(getMethod(json).headers(json.getRequest().getHeaders()).contentType(MediaType.APPLICATION_JSON)
+						.content(getRequestBody(json)).accept(MediaType.APPLICATION_JSON));
+
+		actions.andExpect(status().is(json.getResponse().getStatus().value()));
+
+		MockHttpServletResponse response = actions.andReturn().getResponse();
+
+		for (String key : json.getResponse().getHeaders().keySet()) {
+			assertEquals(json.getResponse().getHeaders().get(key), response.getHeader(key));
+		}
+
+		actions.andExpect(status().is(json.getResponse().getStatus().value())).andExpect(jsonPath("$.*", hasSize(3)));
+	}
+
+	
 	private void test(Json json) throws Exception {
 		ResultActions actions = mockMvc
 				.perform(getMethod(json).headers(json.getRequest().getHeaders()).contentType(MediaType.APPLICATION_JSON)
@@ -79,8 +102,9 @@ public class NoteMicroServiceApplicationTests {
 			assertEquals(json.getResponse().getHeaders().get(key), response.getHeader(key));
 		}
 
-		actions.andExpect(status().is(json.getResponse().getStatus().value())).andExpect(jsonPath("$.*", hasSize(14)));
 		assertEquals(getResponseBody(json), response.getContentAsString());
+		
+		//actions.andExpect(status().is(json.getResponse().getStatus().value())).andExpect(jsonPath("$.*", hasSize(2)));
 	}
 
 	private MockHttpServletRequestBuilder getMethod(Json json) {

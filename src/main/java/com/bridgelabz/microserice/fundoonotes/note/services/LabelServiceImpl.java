@@ -38,10 +38,10 @@ public class LabelServiceImpl implements LabelService {
 
 	@Autowired
 	private ModelMapper modelMapper;
-	
+
 	@Autowired
 	private NoteAWSElasticRepository noteAWSElasticRepository;
-	
+
 	@Autowired
 	private LabelAWSElasticRepository labelAWSElasticRepository;
 
@@ -53,17 +53,24 @@ public class LabelServiceImpl implements LabelService {
 	 * @return LabelDTO
 	 * @throws LabelException
 	 * @throws InvalidLabelNameException
-	 * @throws ElasticsearchFailException 
+	 * @throws ElasticsearchFailException
 	 */
 	@Override
-	public LabelDTO createLabel(String userId, String labelName) throws LabelException, InvalidLabelNameException, ElasticsearchFailException {
+	public LabelDTO createLabel(String userId, String labelName)
+			throws LabelException, InvalidLabelNameException, ElasticsearchFailException {
 		if (labelName == null || labelName.trim().length() == 0) {
 			throw new InvalidLabelNameException("Invalid LabelName");
 		}
 
-		Optional<Label> optionalLabel = labelAWSElasticRepository.findByLabelNameAndUserId(labelName, userId);
-		if (optionalLabel.isPresent()) {
-			throw new LabelException("Label with this name already exists");
+		if (labelName.trim().length() > 10) {
+			throw new InvalidLabelNameException("Maximum label name length can be 10 characters");
+		}
+
+		List<Label> labelList = labelAWSElasticRepository.findAllByUserId(userId);
+		for (int i = 0; i < labelList.size(); i++) {
+			if (labelList.get(i).getLabelName().equals(labelName)) {
+				throw new LabelException("Label with this name already exists");
+			}
 		}
 
 		Label label = new Label();
@@ -90,7 +97,7 @@ public class LabelServiceImpl implements LabelService {
 	 * @param labelId
 	 * @return list of labelDTO
 	 * @throws LabelNotFoundException
-	 * @throws ElasticsearchFailException 
+	 * @throws ElasticsearchFailException
 	 */
 	@Override
 	public List<LabelDTO> getAllLabel(String userId) throws LabelNotFoundException, ElasticsearchFailException {
@@ -114,7 +121,7 @@ public class LabelServiceImpl implements LabelService {
 	 * @param labelName
 	 * @throws LabelNotFoundException
 	 * @throws UnauthorizedException
-	 * @throws ElasticsearchFailException 
+	 * @throws ElasticsearchFailException
 	 */
 	@Override
 	public void updateLabel(String userId, String labelId, String labelName)
@@ -156,7 +163,7 @@ public class LabelServiceImpl implements LabelService {
 	 * @param labelId
 	 * @throws UnauthorizedException
 	 * @throws LabelNotFoundException
-	 * @throws ElasticsearchFailException 
+	 * @throws ElasticsearchFailException
 	 */
 	@Override
 	public void deleteLabel(String userId, String labelId) throws LabelNotFoundException, ElasticsearchFailException {
@@ -195,7 +202,7 @@ public class LabelServiceImpl implements LabelService {
 	 * @throws LabelNotFoundException
 	 * @throws GetLinkInfoException
 	 * @throws NoteNotFoundException
-	 * @throws ElasticsearchFailException 
+	 * @throws ElasticsearchFailException
 	 */
 	@Override
 	public List<NoteDTO> getLabel(String userId, String labelId)
@@ -227,7 +234,8 @@ public class LabelServiceImpl implements LabelService {
 	}
 
 	@Override
-	public List<LabelDTO> sortByName(String userId, String sortType, String format) throws LabelNotFoundException, ElasticsearchFailException {
+	public List<LabelDTO> sortByName(String userId, String sortType, String format)
+			throws LabelNotFoundException, ElasticsearchFailException {
 		List<Label> labelList = labelAWSElasticRepository.findAllByUserId(userId);
 
 		if (labelList.isEmpty()) {

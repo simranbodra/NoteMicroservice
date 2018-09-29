@@ -1,10 +1,10 @@
 {
-	"SuccessfulNoteCreation": {
+	"SuccessfulNoteCreation1": {
 		"request": {
 			"url": "/notes/create",
 			"headers": {
 				"userId": [
-					""
+					"5b98bd6283346c3699956939"
 				]
 			},
 			"body": {
@@ -24,9 +24,126 @@
 			"status": "CREATED",
 			"headers": {
 				
+			}
+		}
+	},
+	"SuccessfulNoteCreation2": {
+		"request": {
+			"url": "/notes/create",
+			"headers": {
+				"userId": [
+					"5b98bd6283346c3699956939"
+				]
 			},
 			"body": {
+				"archive": false,
+				"colour": "Yellow",
+				"description": "",
+				"listOfLabel": [
+					"Hello"
+				],
+				"pin": true,
+				"reminder": "01/12/2018 01:00:00",
+				"title": "Hello"
+			},
+			"method": "POST"
+		},
+		"response": {
+			"status": "CREATED",
+			"headers": {
 				
+			}
+		}
+	},
+	"SuccessfulNoteCreation3": {
+		"request": {
+			"url": "/notes/create",
+			"headers": {
+				"userId": [
+					"5b98bd6283346c3699956939"
+				]
+			},
+			"body": {
+				"archive": false,
+				"colour": "Yellow",
+				"description": "Hello World",
+				"listOfLabel": [
+					"Hello"
+				],
+				"pin": true,
+				"reminder": "01/12/2018 01:00:00",
+				"title": ""
+			},
+			"method": "POST"
+		},
+		"response": {
+			"status": "CREATED",
+			"headers": {
+				
+			}
+		}
+	},
+	"CreateNoteCase1": {
+		"request": {
+			"url": "/notes/create",
+			"headers": {
+				"userId": [
+					"5b98bd6283346c3699956939"
+				]
+			},
+			"body": {
+				"archive": false,
+				"colour": "",
+				"description": "",
+				"listOfLabel": [
+					"Hello"
+				],
+				"pin": false,
+				"reminder": "01/12/2018 01:00:00",
+				"title": ""
+			},
+			"method": "POST"
+		},
+		"response": {
+			"status": "BAD_REQUEST",
+			"headers": {
+				
+			},
+			"body": {
+				"message": "Title ,Description and Colour cannot be empty",
+				"status": 91
+			}
+		}
+	},
+	"CreateNoteCase2": {
+		"request": {
+			"url": "/notes/create",
+			"headers": {
+				"userId": [
+					"5b98bd6283346c3699956939"
+				]
+			},
+			"body": {
+				"archive": false,
+				"colour": "",
+				"description": "Hello World",
+				"listOfLabel": [
+					"Hello"
+				],
+				"pin": false,
+				"reminder": "01/12/2017 01:00:00",
+				"title": "Hello"
+			},
+			"method": "POST"
+		},
+		"response": {
+			"status": "BAD_REQUEST",
+			"headers": {
+				
+			},
+			"body": {
+				"message": "Date and time should be current date and time or after",
+				"status": 4
 			}
 		}
 	}

@@ -1,0 +1,70 @@
+{
+	"SuccessfulLabelCreation": {
+		"request": {
+			"url": "/labels/createLabel?labelName=Message",
+			"headers": {
+				"userId": [
+					"5b98bd6283346c3699956939"
+				]
+			},
+			"body": {
+				
+			},
+			"method": "POST"
+		},
+		"response": {
+			"status": "OK",
+			"headers": {
+				
+			}
+		}
+	},
+	"NullLabelNameTest": {
+		"request": {
+			"url": "/labels/createLabel?labelName=",
+			"headers": {
+				"userId": [
+					"5b98bd6283346c3699956939"
+				]
+			},
+			"body": {
+				
+			},
+			"method": "POST"
+		},
+		"response": {
+			"status": "BAD_REQUEST",
+			"headers": {
+				
+			},
+			"body": {
+				"message": "Invalid LabelName",
+				"status": 96
+			}
+		}
+	},
+	"LabelNameLengthTest": {
+		"request": {
+			"url": "/labels/createLabel?labelName=",
+			"headers": {
+				"userId": [
+					"5b98bd6283346c3699956939"
+				]
+			},
+			"body": {
+				
+			},
+			"method": "POST"
+		},
+		"response": {
+			"status": "BAD_REQUEST",
+			"headers": {
+				
+			},
+			"body": {
+				"message": "Maximum label name length can be 10 characters",
+				"status": 96
+			}
+		}
+	}
+}

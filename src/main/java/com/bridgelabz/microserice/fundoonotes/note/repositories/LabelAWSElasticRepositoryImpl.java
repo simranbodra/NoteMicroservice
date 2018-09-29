@@ -56,9 +56,9 @@ public class LabelAWSElasticRepositoryImpl implements LabelAWSElasticRepository 
 			throw new ElasticsearchFailException("Fail to get response");
 		}
 	}
-	
+
 	@Override
-	public Optional<Label> findById(String labelId) throws ElasticsearchFailException{
+	public Optional<Label> findById(String labelId) throws ElasticsearchFailException {
 		GetRequest getRequest = new GetRequest(labelIndex, labelType, labelId);
 
 		GetResponse getResponse = null;
@@ -215,10 +215,10 @@ public class LabelAWSElasticRepositoryImpl implements LabelAWSElasticRepository 
 
 		return optionalLabel;
 	}
-	
+
 	@Override
-	public Optional<Label> findByLabelNameAndUserId(String labelName, String userId) throws ElasticsearchFailException{
-		
+	public Optional<Label> findByLabelNameAndUserId(String labelName, String userId) throws ElasticsearchFailException {
+
 		BoolQueryBuilder boolQuery = new BoolQueryBuilder();
 		boolQuery.must(QueryBuilders.matchPhrasePrefixQuery("labelName", labelName));
 		boolQuery.must(QueryBuilders.matchPhrasePrefixQuery("userId", userId));
@@ -233,27 +233,28 @@ public class LabelAWSElasticRepositoryImpl implements LabelAWSElasticRepository 
 
 		SearchResponse searchResponse = null;
 
-		try {
-			searchResponse = restHighLevelClient.search(searchRequest);
-		} catch (IOException exception) {
-			throw new ElasticsearchFailException("Fail to get response");
-		}
-
-		SearchHits hits = searchResponse.getHits();
-
 		Optional<Label> optionalLabel = null;
 
-		String label = hits.getAt(0).getSourceAsString();
-
 		try {
-			optionalLabel = Optional.of(objectMapper.readValue(label, Label.class));
-		} catch (IOException exception) {
+			searchResponse = restHighLevelClient.search(searchRequest);
+
 			throw new ElasticsearchFailException("Fail to get response");
+
+			//SearchHits hits = searchResponse.getHits();
+
+			/*SearchHits searchHits = searchResponse.getHits();
+			for (SearchHit searchHit : searchHits) {
+				optionalLabel = Optional.of(objectMapper.convertValue(searchHits.getAt(0), Label.class));
+
+			}
+*/
+		} catch (IOException | ArrayIndexOutOfBoundsException exception) {
+			// throw new ElasticsearchFailException("Fail to get response");
 		}
 
 		return optionalLabel;
 	}
-	
+
 	@Override
 	public void deleteById(String labelId) throws ElasticsearchFailException {
 		DeleteRequest deleteRequest = new DeleteRequest(labelIndex, labelType, labelId);
